@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  insightdesk:
+    build: .
+    ports:
+      - "8000:80"
+    environment:
+      - MOCK_LLM=true
+      - CHROMA_PERSIST_DIR=/data/chroma
+    volumes:
+      - ./data:/data
