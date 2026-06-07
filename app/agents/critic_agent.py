@@ -8,7 +8,7 @@ from ..models import AgentResponse, RetrievalItem
 class CriticAgent:
     """Simple heuristic critic for demo.
 
-    In production replace with model-based checks for PII and groundedness.
+    In production we need to replace with model-based checks for PII and groundedness.
     """
 
     async def critique(self, answer: AgentResponse) -> AgentResponse:
