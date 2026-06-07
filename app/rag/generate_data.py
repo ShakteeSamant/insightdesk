@@ -10,9 +10,12 @@ import json
 import os
 from uuid import uuid4
 
-OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
-OUT_DIR = os.path.abspath(OUT_DIR)
+OUT_DIR = os.getenv(
+    "RAG_DATA_DIR",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data")),
+)
 
+OUT_DIR = os.path.abspath(OUT_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 markdowns = {1: """# Introduction to CloudFlow

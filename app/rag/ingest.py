@@ -12,8 +12,9 @@ def load(path):
 
 
 def ingest_agent(agent: KnowledgeAgent) -> int:
-    docs_path = Path(OUT_DIR) / "docs.json"
-    tickets_path = Path(OUT_DIR) / "tickets.json"
+    data_dir = Path(os.getenv("RAG_DATA_DIR", OUT_DIR))
+    docs_path = data_dir / "docs.json"
+    tickets_path = data_dir / "tickets.json"
 
     if not docs_path.exists():
         return 0
