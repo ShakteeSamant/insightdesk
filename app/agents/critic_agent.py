@@ -1,29 +1,34 @@
-"""Critic agent: self-checks the answer for hallucinations, PII, and confidence.
+"""Critic agent: self-checks the answer for groundedness and confidence.
 
-It returns a decision whether to escalate.
+It returns the (possibly mutated) answer with a decision on whether to escalate.
+In production these heuristics would be replaced with model-based checks for PII
+and groundedness.
 """
-from ..models import AgentResponse, RetrievalItem
+import os
+
+from ..models import AgentResponse
+
+# Relevance scores are in (0, 1] where higher is better. Below this threshold the
+# best supporting citation is considered too weak to trust the answer.
+MIN_SCORE = float(os.getenv("CRITIC_MIN_SCORE", "0.2"))
 
 
 class CriticAgent:
-    """Simple heuristic critic for demo.
-
-    In production we need to replace with model-based checks for PII and groundedness.
-    """
+    """Simple heuristic critic for the demo."""
 
     async def critique(self, answer: AgentResponse) -> AgentResponse:
-        # simple rule: if there are no citations and the text is short -> escalate
-        if not answer.citations or len(answer.citations) == 0:
+        # No supporting evidence -> not grounded -> escalate.
+        if not answer.citations:
             answer.escalate = True
             answer.escalation_packet = {"reason": "no_citations", "confidence": 0.1}
             return answer
 
-        # if any citation score is zero, be suspicious
-        if any(c.score <= 0 for c in answer.citations):
+        # The strongest citation is still too weak to be confident.
+        best_score = max(c.score for c in answer.citations)
+        if best_score < MIN_SCORE:
             answer.escalate = True
-            answer.escalation_packet = {"reason": "low_score"}
+            answer.escalation_packet = {"reason": "low_confidence", "confidence": round(best_score, 3)}
             return answer
 
-        # otherwise, pass
         answer.escalate = False
         return answer

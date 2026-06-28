@@ -1,25 +1,16 @@
-﻿from ..langgraph_nodes.schemas import Ticket, IntentResult
+"""Intent node: classifies a ticket into intent + urgency.
+
+Delegates to :class:`IntentClassifier` so classification logic lives in exactly
+one place and can be patched/extended independently of the graph wiring.
+"""
+from ..agents.intent_classifier import IntentClassifier
+from ..langgraph_nodes.schemas import IntentResult, Ticket
 
 
 class IntentNode:
+    def __init__(self):
+        self.classifier = IntentClassifier()
+
     async def run(self, ticket: Ticket) -> IntentResult:
-        q = ticket.text.lower()
-        if any(k in q for k in ["error", "failed", "broke", "bug"]):
-            intent = "bug"
-        elif any(k in q for k in ["billing", "charge", "invoice"]):
-            intent = "billing"
-        elif any(k in q for k in ["export", "download", "backup"]):
-            intent = "how_to"
-        elif any(k in q for k in ["angry", "complaint", "not happy", "refund"]):
-            intent = "complaint"
-        else:
-            intent = "general"
-
-        if any(k in q for k in ["urgent", "asap", "now", "immediately"]):
-            urgency = "high"
-        elif intent == "complaint":
-            urgency = "high"
-        else:
-            urgency = "normal"
-
-        return IntentResult(intent=intent, urgency=urgency, metadata={})
+        msg = await self.classifier.classify(ticket.text)
+        return IntentResult(intent=msg.intent, urgency=msg.urgency, metadata=msg.metadata)

@@ -11,6 +11,12 @@ from fastapi.responses import JSONResponse
 from uuid import uuid4
 import logging
 
+from dotenv import load_dotenv
+
+# Load environment variables from a local .env file (MOCK_LLM, OPENAI_API_KEY,
+# CHROMA_PERSIST_DIR, ...) before any component reads them.
+load_dotenv()
+
 from .agents.orchestrator import Orchestrator
 from .models import ProcessRequest, ProcessResponse
 from .utils import setup_logging
@@ -36,7 +42,7 @@ async def process(req: ProcessRequest, request: Request):
     trace_id = str(uuid4())
     logger.info("/process received", extra={"trace_id": trace_id, "query": req.query})
     result = await orchestrator.handle(req.query, req.user_id, trace_id)
-    return JSONResponse(content=result.dict())
+    return JSONResponse(content=result.model_dump())
 
 
 @app.get("/docs/{doc_id}")

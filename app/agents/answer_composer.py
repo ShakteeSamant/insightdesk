@@ -10,7 +10,10 @@ from typing import List
 from openai import OpenAI
 from ..models import RetrievalItem, AgentResponse
 
-MOCK = os.environ.get("MOCK_LLM", "true").lower() in ("1", "true", "yes")
+
+def _mock_enabled() -> bool:
+    """Read MOCK_LLM at call time so the flag can be toggled per request/test."""
+    return os.environ.get("MOCK_LLM", "true").lower() in ("1", "true", "yes")
 
 
 class AnswerComposer:
@@ -20,7 +23,7 @@ class AnswerComposer:
     """
 
     async def compose(self, query: str, citations: List[RetrievalItem]) -> AgentResponse:
-        if MOCK:
+        if _mock_enabled():
             if len(citations) <= 1:
                 answer_text = "The system found insufficient evidence to provide a grounded answer. Escalating to a human." 
                 return AgentResponse(success=False, text=answer_text, citations=[], escalate=True)
